@@ -7,19 +7,19 @@ function equipe_bots(){
     
     
     bot1_equip = true;
-    bot1_name = "None";
+    bot1_name = "None Bot1";
     
     bot2_equip = false;
-    bot2_name = "Null";
+    bot2_name = "Null Bot2";
     
     bot3_equip = false;
-    bot3_name = "Zilth";
+    bot3_name = "Zilth Bot3";
     
     bot4_equip = true;
-    bot4_name = "Nada";
+    bot4_name = "Nada Bot4";
     
     bot5_equip = true;
-    bot5_name = "Nope";
+    bot5_name = "Nope Bot5";
 
     ///// Equipe the Bots Here 
     ///// You can qupip up to 3 Bots for the Mission
@@ -167,8 +167,10 @@ var bot4_create;
 var bot4_shoot;
 var bot4_down;
 var bot4_up;
-var bot4_timeDelay = 200;
+var bot4_timeDelay = 1500;
 var bot4_bullet_time;
+var bot4_bomb_timer;
+var bot4_current_bomb = null;
 
 var bot5_equip;
 var bot5;
@@ -178,8 +180,11 @@ var bot5_create;
 var bot5_shoot;
 var bot5_down;
 var bot5_up;
-var bot5_timeDelay = 200;
+var bot5_timeDelay = 10000;
 var bot5_bullet_time;
+var bot5_slime_time;
+
+var slimeHandler;
 
 var map_keys;
 //var pooled_easy_num = 20;
@@ -272,6 +277,7 @@ var phase3_config = {
                     frame: 0,
                     animation: [0,1],
                     health: 10,
+                    speed: 1
                     };
 
 
@@ -280,13 +286,15 @@ var medium_aliens_config = {
             frame: 2,
             animation: [2,3],
             health: 15,
+            speed: 1
             };
 
 var hard_aliens_config = {
             spritesheet: "spritesheet",
             frame: 4,
             animation: [4,5],
-            health: 20
+            health: 20,
+            speed: 1
             };
 
 var phase_index = 0;
@@ -297,7 +305,7 @@ var next_alien;
     
 function preload() {
         /// stand in graphcis for the game 
-        game.load.spritesheet("spritesheet", "./assets/spritesheet.png", 100, 100, 18)
+        game.load.spritesheet("spritesheet", "./assets/spritesheet.png", 100, 100, 20)
         game.load.image("test_bullet", "./assets/bulletTest.png")
         game.load.image("flame", "./assets/flame.png")
 
@@ -378,7 +386,7 @@ function update(game){
             num_alive = 0;
             
             phase1_aliens.forEachAlive(function(alien){
-                alien.body.x -= 1;
+                alien.body.x -= alien.speed;
                 num_alive += 1;
             })
             
@@ -392,7 +400,7 @@ function update(game){
             num_alive = 0;
             
             phase2_aliens.forEachAlive(function(alien){
-                alien.body.x -= 1;
+                alien.body.x -= alien.speed;
                 num_alive += 1;
                 
             })
@@ -406,7 +414,7 @@ function update(game){
             num_alive = 0;
             
             phase3_aliens.forEachAlive(function(alien){
-                alien.body.x -= 1;
+                alien.body.x -= alien.speed;
                 num_alive += 1;
                 
             })
@@ -476,15 +484,18 @@ function create_aliens(config){
             /// set location off screen
             var alien = this_group.create(x_space, y_row, sorted_props[0][0].spritesheet, sorted_props[0][0].frame)
             alien.health = sorted_props[0][0].health
+            alien.speed = sorted_props[0][0].speed
             alien.animations.add("bonce", sorted_props[0][0].animation, 2, true);
             
         }else if(num <= sorted_props[1][1]){
              var alien = this_group.create(x_space, y_row, sorted_props[1][0].spritesheet, sorted_props[1][0].frame)
              alien.health = sorted_props[1][0].health
+             alien.speed = sorted_props[1][0].speed
              alien.animations.add("bonce", sorted_props[1][0].animation, 2, true);
         }else{ /// the remaining precentage is the remainder 
              var alien = this_group.create(x_space, y_row, sorted_props[2][0].spritesheet, sorted_props[2][0].frame)
              alien.health = sorted_props[2][0].health
+             alien.speed = sorted_props[2][0].speed
              alien.animations.add("bonce", sorted_props[2][0].animation, 2, true);
              
         }
@@ -837,15 +848,24 @@ function bot4_create(){
     
     bot4.addChild(bot4_name);
     
-    /// Create test bots bullets 
+    
+    //// Bot4 is a bomber, make his bombs  
     bot4_bullets = game.add.group();
     bot4_bullets.enableBody = true;
     bot4_bullets.physicsBodyType = Phaser.Physics.ARACADE;
-    bot4_bullets.createMultiple(20, "test_bullet");
+    bot4_bullets.createMultiple(1, "spritesheet", 18);
     bot4_bullets.setAll('outOfBoundsKill', true);
     bot4_bullets.setAll('checkWorldBounds', true);
     
-    bot4_bullets.setAll('damage', 1); /// each bullet will do 5 damage
+    bot4_bullets.setAll('damage', 20); /// each bomb will do 20 damage
+    
+//    bot4_bullets.forEachExists(function(bullet){
+//        bullet.animations.add('boom', [9,10,11,12,13], 5, false)
+//    })
+//    
+    
+    bot4_bullets.callAll('animations.add', 'animations', 'boom', [9,10,11,12,13], 5, false);
+    bot4_bullets.callAll('animations.add', 'animations', 'wait', [18], 5, false);
     
     bot4_bullet_time = game.time.now;
 
@@ -853,27 +873,25 @@ function bot4_create(){
 }; /// End of test create 
 
 function bot4_shoot(){
-    
-    /// kill bullets thats are more than 150 pixals away 
-    bot4_bullets.forEachAlive(function(bullet){
-        
-        
-    })
         
     
     if(game.time.now > bot4_bullet_time){
         // change name text to white
         bot4.children[0].fill = "#FFFFFF"
         
-    
-    
         //// Get first existing bullet from the bot's pool
-        bullet = bot4_bullets.getFirstExists(false);
+        bullet = bot4_bullets.getFirstDead(false);
 
         if(bullet){
-            bullet.reset(bot4.x + bot4.width, bot4.y + + (bot4.height/2));
-            bullet.body.velocity.x =+ 300;
+
+            bullet.reset(bot4.x + bot4.width, bot4.y + (bot4.height/2));
+            bullet.body.velocity.x =+ 500;
             bot4_bullet_time = game.time.now + bot4_timeDelay;
+            bot4_bomb_timer = game.time.now + 1000;
+            bot4_current_bomb = bullet;
+            bot4_current_bomb.animations.play('wait')
+
+
 
         }
     }/// end game.time.now > 
@@ -903,6 +921,34 @@ function bot4_update(){
     }
     
 
+    /// Kill bullets that are more than 150 pixals away
+    bot4_bullets.forEachAlive(function(bullet){
+        if(bullet.x > bot4.x + 200){
+            bullet.body.velocity.x = 0;
+        }
+    })
+
+
+    
+    // detionate bombs that have their timers expire
+
+    if (game.time.now > bot4_bomb_timer){
+
+        bot4_current_bomb.animations.play('boom');
+
+
+        bot4_current_bomb.animations.currentAnim.onComplete.add(function () {	
+
+            bot4_current_bomb.kill();
+//                bot4_current_bomb = null;
+//                bot4_bomb_timer = 0;
+        }, this);
+
+
+        
+        
+    }
+
     
     /// Change the Text to green when ready to fire 
     if(game.time.now > bot4_bullet_time){
@@ -928,15 +974,15 @@ function bot5_create(){
     
     bot5.addChild(bot5_name);
     
-    /// Create test bots bullets 
+    /// bot5 makes slime, these are slime squares 
     bot5_bullets = game.add.group();
     bot5_bullets.enableBody = true;
     bot5_bullets.physicsBodyType = Phaser.Physics.ARACADE;
-    bot5_bullets.createMultiple(20, "test_bullet");
+    bot5_bullets.createMultiple(3, "spritesheet", 19);
     bot5_bullets.setAll('outOfBoundsKill', true);
     bot5_bullets.setAll('checkWorldBounds', true);
     
-    bot5_bullets.setAll('damage', 1); /// each bullet will do 5 damage
+    bot5_bullets.setAll('damage', 0); /// each bullet will do 5 damage
     
     bot5_bullet_time = game.time.now;
 
@@ -945,28 +991,24 @@ function bot5_create(){
 
 function bot5_shoot(){
     
-    /// kill bullets thats are more than 150 pixals away 
-    bot5_bullets.forEachAlive(function(bullet){
-        
-        
-    })
-        
+
     
     if(game.time.now > bot5_bullet_time){
         // change name text to white
         bot5.children[0].fill = "#FFFFFF"
         
-    
-    
-        //// Get first existing bullet from the bot's pool
-        bullet = bot5_bullets.getFirstExists(false);
 
-        if(bullet){
-            bullet.reset(bot5.x + bot5.width, bot5.y + + (bot5.height/2));
-            bullet.body.velocity.x =+ 300;
-            bot5_bullet_time = game.time.now + bot5_timeDelay;
-
-        }
+        slime_x = 100;
+        slime_y = bot5.y;
+        //// slime the area
+        bot5_bullets.forEach(function(slime){
+            slime.reset(slime_x, slime_y);
+            slime.z = 0;
+            slime_x += 100;
+            
+        })
+        
+        bot5_slime_time = game.time.now + bot5_timeDelay;
     }/// end game.time.now > 
 
 }; /// end of test shoot 
@@ -986,11 +1028,11 @@ function bot5_update(){
     
     /// sooo needs to be cleaned 
     if (current_phase == 'phase1'){
-        game.physics.arcade.overlap(bot5_bullets, phase1_aliens, collisionHandler, null, this);
+        game.physics.arcade.overlap(bot5_bullets, phase1_aliens, slimeHandler, null, this);
     }else if(current_phase == 'phase3'){
-        game.physics.arcade.overlap(bot5_bullets, phase2_aliens, collisionHandler, null, this);
+        game.physics.arcade.overlap(bot5_bullets, phase2_aliens, slimeHandler, null, this);
     }else if(current_phase == 'phase3'){
-        game.physics.arcade.overlap(bot5_bullets, phase3_aliens, collisionHandler, null, this);
+        game.physics.arcade.overlap(bot5_bullets, phase3_aliens, slimeHandler, null, this);
     }
     
 
@@ -1001,3 +1043,35 @@ function bot5_update(){
         }
 
 }/// End bot5_update
+
+function slimeHandler(slime, alien){
+  game.world.bringToTop(phase1_aliens);
+    
+
+    
+    
+    
+    
+    /// yeah i'm not proud of my choice either...
+        if(bot1_equip){
+            game.world.bringToTop(bot1_bullets);
+   
+        }
+        if(bot2_equip){
+            game.world.bringToTop(bot2_bullets);
+        }
+        if(bot3_equip){
+            game.world.bringToTop(bot3_bullets);
+        }
+
+        if(bot4_equip){
+            game.world.bringToTop(bot4_bullets);
+        }
+
+
+
+
+    alien.speed = .33
+    console.log('here')
+    
+};
