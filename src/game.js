@@ -193,15 +193,23 @@ var map_keys;
 
 var alive = true; 
 
-var phases;
+var aliens_passed = 0;
+
+var phase_index;
+var phase_list;
 var current_phase;
 var phase1_complete = false;
 var phase2_complete = false;
 var phase3_complete = false;
 
+var commentText;
+
 /// Phase Paramters 
 var phase1_config = {
     num: 10,
+    num_dead: 0,
+    finished: false,
+    name: "Phase 1",
     start_delay: 2000, // in miliseconds 
     easy: .75,
     medium: .20,
@@ -220,6 +228,9 @@ var phase1_config = {
 
 var phase2_config = {
     num: 15,
+    num_dead: 0,
+    finished: false,
+    name: "Phase 2",
     start_delay: 2000, // in miliseconds 
     easy: .50,
     medium: .30,
@@ -244,6 +255,9 @@ var phase2_config = {
 
 var phase3_config = {
     num: 20,
+    num_dead: 0,
+    finished: false,
+    name: "Phase 3",
     start_delay: 2000, // in miliseconds 
     easy: .30,
     medium: .30,
@@ -273,39 +287,42 @@ var phase3_config = {
 
 
  var easy_aliens_config = {
-                    spritesheet: "spritesheet",
-                    frame: 0,
-                    animation: [0,1],
+                    spritesheet: "texture",
+                    frame: 'alien2_part1.jpg',
+                    animation: ['alien2_part1.jpg','alien2_part2.jpg'],
                     health: 10,
                     speed: 1
                     };
 
 
 var medium_aliens_config = {
-            spritesheet: "spritesheet",
-            frame: 2,
-            animation: [2,3],
+            spritesheet: "texture",
+            frame: 'alien_part1.jpg',
+            animation: ['alien_part1.jpg','alien_part2.jpg'],
             health: 15,
             speed: 1
             };
 
 var hard_aliens_config = {
-            spritesheet: "spritesheet",
-            frame: 4,
-            animation: [4,5],
+            spritesheet: "texture",
+            frame: 'alien3_part1.jpg',
+            animation: ['alien3_part1.jpg','alien3_part2.jpg',],
             health: 20,
             speed: 1
             };
 
-var phase_index = 0;
 
-var now;
-var next_alien;
+
+//var now;
+//var next_alien;
 
     
 function preload() {
         /// stand in graphcis for the game 
         game.load.spritesheet("spritesheet", "./assets/spritesheet.png", 100, 100, 20)
+        game.load.atlas('texture', 'assets/spritesheet_final.png', 'assets/alien6_sprite.json', Phaser.Loader.TEXTURE_ATLAS_JSON_HASH);
+        //game.load.atlas('texture', 'assets/alien_practice1.png', 'assets/alien_practice1.json', Phaser.Loader.TEXTURE_ATLAS_JSON_HASH);
+    
         game.load.image("test_bullet", "./assets/bulletTest.png")
         game.load.image("flame", "./assets/flame.png")
 
@@ -360,8 +377,20 @@ function create(){
         create_aliens(phase3_config)
         
         
-        current_phase = 'phase1';
-        phase1_aliens.forEachAlive(function(alien){
+        phase_list = [
+            phase1_config,
+            phase2_config,
+            phase3_config
+        ]
+        
+
+        
+        phase_index = 0;
+    
+        
+        
+        current_phase = phase_list[phase_index]
+        current_phase.group.forEachAlive(function(alien){
                 alien.play('bonce');
             })
         
@@ -370,7 +399,17 @@ function create(){
         /// test bot
         equipe_bots();
         
+    
+            //  Text
+        commentText = game.add.text(game.world.centerX,game.world.centerY,' ', { font: '32px Arial', fill: '#fff', align: 'center' });
+        commentText.anchor.setTo(0.5, 0.5);
+        commentText.visible = false;
         
+        if(current_phase.name === "Phase 1"){
+            commentText.visible = true;
+            commentText.setText("The Aliens Are Comming! \n Defend The Base!")
+            game.time.events.add(Phaser.Timer.SECOND * 2, fadeText, this);
+        }
         
     } /// End of create function 
 
@@ -378,83 +417,115 @@ function update(game){
     
     use_bots();
     
-    if(alive == true){
-        
-        //// Check what phase we are in
-        if (phase1_complete == false){
-            
-            num_alive = 0;
-            
-            phase1_aliens.forEachAlive(function(alien){
-                alien.body.x -= alien.speed;
-                num_alive += 1;
-            })
-            
-            if(num_alive === 0 ){
-                phase1_complete = true;
-                current_phase = 'phase2'
-            }
-            
-
-        }else if (phase2_complete === false){
-            num_alive = 0;
-            
-            phase2_aliens.forEachAlive(function(alien){
-                alien.body.x -= alien.speed;
-                num_alive += 1;
-                
-            })
-            
-            if(num_alive === 0 ){
-                phase1_complete = true;
-                current_phase = 'phase3'
-            }
-            
-        }else if(phase3_complete === false){
-            num_alive = 0;
-            
-            phase3_aliens.forEachAlive(function(alien){
-                alien.body.x -= alien.speed;
-                num_alive += 1;
-                
-            })
-            
-            if(num_alive === 0 ){
-                phase1_complete = true;
-                current_phase = 'game_over'
-            }
-            
-        }
-        
-        
-        
-        
-        /// This really needs to be cleaned up but hey its working 
-        if(bot1_equip){
-            bot1_update()
-   
-        }
-        if(bot2_equip){
-            bot2_update()
-        }
-        if(bot3_equip){
-            bot3_update()
-        }
-
-        if(bot4_equip){
-            bot4_update()
-        }
-
-        if(bot5_equip){
-            bot5_update()
-        }
-
-        
-    }/// End if alive 
     
-    
+    /// Text display 
+
+    if(aliens_passed == 5){
+        commentText.visible = true;
+        commentText.setText("Five Aliens Have Gotten Through!")
+        game.add.tween(commentText).to( { alpha: 1 }, 50, "Linear", true);
+        
+        game.time.events.add(Phaser.Timer.SECOND * 2, fadeText, this);
+    }
+    else if(aliens_passed == 8){
+        commentText.visible = true;
+        commentText.setText("Eight Aliens Have Psssed You! \n Are you even trying?")
+        game.add.tween(commentText).to( { alpha: 1 }, 50, "Linear", true);
+        game.time.events.add(Phaser.Timer.SECOND * 2, fadeText, this);
+    }else if(aliens_passed == 12){
+        commentText.visible = true;
+        commentText.setText("Are You On The Aliens Side? \n 12 Aliens have Went By!")
+        game.add.tween(commentText).to( { alpha: 1 }, 50, "Linear", true);
+        game.time.events.add(Phaser.Timer.SECOND * 2, fadeText, this);
+    }
+    else if(aliens_passed == 16){
+        commentText.visible = true;
+        commentText.setText("Just a hint, the aliens are the bad guys.")
+        game.add.tween(commentText).to( { alpha: 1 }, 50, "Linear", true);
+        game.time.events.add(Phaser.Timer.SECOND * 2, fadeText, this);
+    }
+
+    if(current_phase.finished == false){
+
+        num_alive = 0;
+
+
+        current_phase.group.forEachAlive(function(alien){
+            alien.body.x -= alien.speed;
+
+            if(alien.body.x < 10){
+                alien.kill()
+                aliens_passed += 1;
+
+            }
+
+        })
+
+        current_phase.group.forEachAlive(function(alien){
+
+            num_alive += 1;
+
+        })
+
+        if(num_alive === 0 ){
+            current_phase.finished = true;
+            phase_index++;
+            
+            if(phase_index < phase_list.length){
+                current_phase = phase_list[phase_index]
+                commentText.visible = true;
+                commentText.setText(current_phase.name + "!")
+                game.add.tween(commentText).to( { alpha: 1 }, 50, "Linear", true);
+                game.time.events.add(Phaser.Timer.SECOND * 2, fadeText, this);
+                
+            }else{
+                /// show game over
+                commentText.visible = true
+                commentText.setText("ALL PHASES COMPLETE \n CONGRATS!")
+                game.add.tween(commentText).to( { alpha: 1 }, 50, "Linear", true);
+                
+            }
+            
+
+        }
+
+
+    } /// End of is current phase finished 
+
+
+
+
+    /// This really needs to be cleaned up but hey its working 
+    if(bot1_equip){
+        bot1_update()
+
+    }
+    if(bot2_equip){
+        bot2_update()
+    }
+    if(bot3_equip){
+        bot3_update()
+    }
+
+    if(bot4_equip){
+        bot4_update()
+    }
+
+    if(bot5_equip){
+        bot5_update()
+    }
+
+        
+
     
 } // End of Update function 
+
+/// fade text 
+function fadeText() {
+
+    game.add.tween(commentText).to( { alpha: 0 }, 200, Phaser.Easing.Linear.None, true);
+
+}
 
 function create_aliens(config){
     
@@ -521,7 +592,9 @@ function collisionHandler (bullet, alien) {
         
         alien.animations.play("boom")
         alien.animations.currentAnim.onComplete.add(function () {	
-            alien.kill();}, this);
+        alien.kill();}, this);
+        
+        
         
     };
     bullet.kill();
@@ -628,14 +701,8 @@ function bot1_down(){
 function bot1_update(){
     
     
-    /// sooo needs to be cleaned 
-    if (current_phase == 'phase1'){
-        game.physics.arcade.overlap(bot1_bullets, phase1_aliens, collisionHandler, null, this);
-    }else if(current_phase == 'phase3'){
-        game.physics.arcade.overlap(bot1_bullets, phase2_aliens, collisionHandler, null, this);
-    }else if(current_phase == 'phase3'){
-        game.physics.arcade.overlap(bot1_bullets, phase3_aliens, collisionHandler, null, this);
-    }
+    game.physics.arcade.overlap(bot1_bullets, current_phase.group, collisionHandler, null, this);
+    
     
     /// Change the Text to green when ready to fire 
     if(game.time.now > bot1_bullet_time){
@@ -716,14 +783,7 @@ function bot2_down(){
 function bot2_update(){
     
     
-    /// sooo needs to be cleaned 
-    if (current_phase == 'phase1'){
-        game.physics.arcade.overlap(bot2_bullets, phase1_aliens, collisionHandler, null, this);
-    }else if(current_phase == 'phase3'){
-        game.physics.arcade.overlap(bot2_bullets, phase2_aliens, collisionHandler, null, this);
-    }else if(current_phase == 'phase3'){
-        game.physics.arcade.overlap(bot2_bullets, phase3_aliens, collisionHandler, null, this);
-    }
+    game.physics.arcade.overlap(bot2_bullets, current_phase.group, collisionHandler, null, this);
     
     /// Kill bullets that are more than 150 pixals away
     bot2_bullets.forEachAlive(function(bullet){
@@ -813,15 +873,7 @@ function bot3_down(){
 function bot3_update(){
     
     
-    /// sooo needs to be cleaned 
-    if (current_phase == 'phase1'){
-        game.physics.arcade.overlap(bot3_bullets, phase1_aliens, collisionHandler, null, this);
-    }else if(current_phase == 'phase3'){
-        game.physics.arcade.overlap(bot3_bullets, phase2_aliens, collisionHandler, null, this);
-    }else if(current_phase == 'phase3'){
-        game.physics.arcade.overlap(bot3_bullets, phase3_aliens, collisionHandler, null, this);
-    }
-    
+    game.physics.arcade.overlap(bot3_bullets, current_phase.group, collisionHandler, null, this);
 
     
     /// Change the Text to green when ready to fire 
@@ -910,15 +962,8 @@ function bot4_down(){
 
 function bot4_update(){
     
-    
-    /// sooo needs to be cleaned 
-    if (current_phase == 'phase1'){
-        game.physics.arcade.overlap(bot4_bullets, phase1_aliens, collisionHandler, null, this);
-    }else if(current_phase == 'phase3'){
-        game.physics.arcade.overlap(bot4_bullets, phase2_aliens, collisionHandler, null, this);
-    }else if(current_phase == 'phase3'){
-        game.physics.arcade.overlap(bot4_bullets, phase3_aliens, collisionHandler, null, this);
-    }
+    game.physics.arcade.overlap(bot4_bullets, current_phase.group, collisionHandler, null, this);
+
     
 
     /// Kill bullets that are more than 150 pixals away
@@ -1007,8 +1052,8 @@ function bot5_shoot(){
             slime_x += 100;
             
         })
-        
-        bot5_slime_time = game.time.now + bot5_timeDelay;
+        bot5_bullet_time = game.time.now + bot5_timeDelay
+        ///bot5_slime_time = game.time.now + bot5_timeDelay;
     }/// end game.time.now > 
 
 }; /// end of test shoot 
@@ -1025,32 +1070,22 @@ function bot5_down(){
 
 function bot5_update(){
     
-    
-    /// sooo needs to be cleaned 
-    if (current_phase == 'phase1'){
-        game.physics.arcade.overlap(bot5_bullets, phase1_aliens, slimeHandler, null, this);
-    }else if(current_phase == 'phase3'){
-        game.physics.arcade.overlap(bot5_bullets, phase2_aliens, slimeHandler, null, this);
-    }else if(current_phase == 'phase3'){
-        game.physics.arcade.overlap(bot5_bullets, phase3_aliens, slimeHandler, null, this);
-    }
-    
-
+    game.physics.arcade.overlap(bot5_bullets, current_phase.group, slimeHandler, null, this);
     
     /// Change the Text to green when ready to fire 
     if(game.time.now > bot5_bullet_time){
         bot5.children[0].fill = "#6fC000";
+        
+        /// remove slime 
+        bot5_bullets.forEach(function (slime) { slime.kill(); });
+        current_phase.group.forEach(function (alien) { alien.speed = 1; });
+
         }
 
 }/// End bot5_update
 
 function slimeHandler(slime, alien){
-  game.world.bringToTop(phase1_aliens);
-    
-
-    
-    
-    
+  game.world.bringToTop(current_phase.group);
     
     /// yeah i'm not proud of my choice either...
         if(bot1_equip){
@@ -1071,7 +1106,7 @@ function slimeHandler(slime, alien){
 
 
 
-    alien.speed = .33
-    console.log('here')
+    alien.speed = .33;
+
     
 };
