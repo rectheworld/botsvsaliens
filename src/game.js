@@ -167,7 +167,7 @@ var bot4_create;
 var bot4_shoot;
 var bot4_down;
 var bot4_up;
-var bot4_timeDelay = 1500;
+var bot4_timeDelay = 3000;
 var bot4_bullet_time;
 var bot4_bomb_timer;
 var bot4_current_bomb = null;
@@ -289,7 +289,8 @@ var phase3_config = {
  var easy_aliens_config = {
                     spritesheet: "texture",
                     frame: 'alien2_part1.jpg',
-                    animation: ['alien2_part1.jpg','alien2_part2.jpg'],
+                    animation: ['alien2_part1.jpg','alien2_part2.jpg', 'alien2_part3.jpg'],
+                    boom_frames: ['alien2_part4.jpg','alien2_part5.jpg', 'alien2_part6.jpg'],
                     health: 10,
                     speed: 1
                     };
@@ -298,7 +299,8 @@ var phase3_config = {
 var medium_aliens_config = {
             spritesheet: "texture",
             frame: 'alien_part1.jpg',
-            animation: ['alien_part1.jpg','alien_part2.jpg'],
+            animation: ['alien_part1.jpg','alien_part2.jpg', 'alien_part3.jpg'],
+            boom_frames: ['alien_part5.jpg','alien_part6.jpg', 'alien_part7.jpg','alien_part8.jpg'],
             health: 15,
             speed: 1
             };
@@ -306,7 +308,8 @@ var medium_aliens_config = {
 var hard_aliens_config = {
             spritesheet: "texture",
             frame: 'alien3_part1.jpg',
-            animation: ['alien3_part1.jpg','alien3_part2.jpg',],
+            animation: ['alien3_part1.jpg','alien3_part2.jpg', 'alien3_part3.jpg'],
+            boom_frames: ['alien3_part5.jpg','alien3_part6.jpg', 'alien3_part7.jpg', 'alien3_part8.jpg'],
             health: 20,
             speed: 1
             };
@@ -325,11 +328,13 @@ function preload() {
     
         game.load.image("test_bullet", "./assets/bulletTest.png")
         game.load.image("flame", "./assets/flame.png")
+        
 
     }
 
 function create(){
-        game.stage.backgroundColor = "#a8a8a8";
+//        game.stage.backgroundColor = "#a8a8a8";
+        game.stage.backgroundColor = "#fff";
 
         
         game.physics.startSystem(Phaser.Physics.ARCADE);
@@ -337,7 +342,8 @@ function create(){
         /// Create background 
         var graphics = game.add.graphics(0, 0);
         //graphics.lineStyle(2, "#000000", 1);
-        graphics.beginFill(0x7e7e7e, 1);
+//        graphics.beginFill(0x7e7e7e, 1);
+        graphics.beginFill(0xe1eaf0, 1);
         /// dark gray stripe
         graphics.drawRect(0,0, game.width, game.height / 5);
         graphics.drawRect(0,(game.height / 5) * 2, game.width, game.height / 5);
@@ -401,7 +407,7 @@ function create(){
         
     
             //  Text
-        commentText = game.add.text(game.world.centerX,game.world.centerY,' ', { font: '32px Arial', fill: '#fff', align: 'center' });
+        commentText = game.add.text(game.world.centerX,game.world.centerY,' ', { font: '32px Arial', fill: '#2d8457', align: 'center' });
         commentText.anchor.setTo(0.5, 0.5);
         commentText.visible = false;
         
@@ -440,7 +446,7 @@ function update(game){
     }
     else if(aliens_passed == 16){
         commentText.visible = true;
-        commentText.setText("Just a hint, the aliens are the bad guys.")
+        commentText.setText("Just a hint,\n the aliens are the bad guys.")
         game.add.tween(commentText).to( { alpha: 1 }, 50, "Linear", true);
         game.time.events.add(Phaser.Timer.SECOND * 2, fadeText, this);
     }
@@ -473,6 +479,10 @@ function update(game){
             
             if(phase_index < phase_list.length){
                 current_phase = phase_list[phase_index]
+                current_phase.group.forEachAlive(function(alien){
+                    alien.play('bonce');
+                    })
+                
                 commentText.visible = true;
                 commentText.setText(current_phase.name + "!")
                 game.add.tween(commentText).to( { alpha: 1 }, 50, "Linear", true);
@@ -556,24 +566,26 @@ function create_aliens(config){
             var alien = this_group.create(x_space, y_row, sorted_props[0][0].spritesheet, sorted_props[0][0].frame)
             alien.health = sorted_props[0][0].health
             alien.speed = sorted_props[0][0].speed
-            alien.animations.add("bonce", sorted_props[0][0].animation, 2, true);
+            alien.animations.add("bonce", sorted_props[0][0].animation, 5, true);
+            alien.animations.add('boom', sorted_props[0][0].boom_frames, 10, false)
             
         }else if(num <= sorted_props[1][1]){
              var alien = this_group.create(x_space, y_row, sorted_props[1][0].spritesheet, sorted_props[1][0].frame)
              alien.health = sorted_props[1][0].health
              alien.speed = sorted_props[1][0].speed
-             alien.animations.add("bonce", sorted_props[1][0].animation, 2, true);
+             alien.animations.add("bonce", sorted_props[1][0].animation, 5, true);
+            alien.animations.add('boom', sorted_props[1][0].boom_frames, 10, false)
         }else{ /// the remaining precentage is the remainder 
              var alien = this_group.create(x_space, y_row, sorted_props[2][0].spritesheet, sorted_props[2][0].frame)
              alien.health = sorted_props[2][0].health
              alien.speed = sorted_props[2][0].speed
-             alien.animations.add("bonce", sorted_props[2][0].animation, 2, true);
+             alien.animations.add("bonce", sorted_props[2][0].animation, 5, true);
+            alien.animations.add('boom', sorted_props[2][0].boom_frames, 10, false)
              
         }
         
             
-        alien.animations.add('boom', [9,10,11,12,13], 5, false)
-        
+
     }
     
     
@@ -910,12 +922,7 @@ function bot4_create(){
     bot4_bullets.setAll('checkWorldBounds', true);
     
     bot4_bullets.setAll('damage', 20); /// each bomb will do 20 damage
-    
-//    bot4_bullets.forEachExists(function(bullet){
-//        bullet.animations.add('boom', [9,10,11,12,13], 5, false)
-//    })
-//    
-    
+        
     bot4_bullets.callAll('animations.add', 'animations', 'boom', [9,10,11,12,13], 5, false);
     bot4_bullets.callAll('animations.add', 'animations', 'wait', [18], 5, false);
     
@@ -941,6 +948,8 @@ function bot4_shoot(){
             bot4_bullet_time = game.time.now + bot4_timeDelay;
             bot4_bomb_timer = game.time.now + 1000;
             bot4_current_bomb = bullet;
+            bot4_current_bomb.scale.setTo(1, 1);
+            bot4_current_bomb.anchor.setTo(.5, .5);
             bot4_current_bomb.animations.play('wait')
 
 
@@ -965,6 +974,7 @@ function bot4_update(){
     game.physics.arcade.overlap(bot4_bullets, current_phase.group, collisionHandler, null, this);
 
     
+    
 
     /// Kill bullets that are more than 150 pixals away
     bot4_bullets.forEachAlive(function(bullet){
@@ -978,7 +988,10 @@ function bot4_update(){
     // detionate bombs that have their timers expire
 
     if (game.time.now > bot4_bomb_timer){
-
+        
+        bot4_current_bomb.scale.setTo(2, 2);
+        
+        
         bot4_current_bomb.animations.play('boom');
 
 
