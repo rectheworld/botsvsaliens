@@ -5,20 +5,27 @@ var game = new Phaser.Game(700, 500, Phaser.AUTO, "gamebox", {preload: preload, 
 
 function equipe_bots(){
     
-    
+    //// bot 1
     bot1_equip = true;
     bot1_name = "None Bot1";
+    // -- Create Function --
+    /// bot1_create()
+    // -- Update Functions --
+    /// bot1_shoot()
+    /// bot1_up()
+    /// bot1_down()
     
-    bot2_equip = false;
+    
+    bot2_equip = true;
     bot2_name = "Null Bot2";
     
-    bot3_equip = false;
+    bot3_equip = true;
     bot3_name = "Zilth Bot3";
     
-    bot4_equip = true;
+    bot4_equip = false;
     bot4_name = "Nada Bot4";
     
-    bot5_equip = true;
+    bot5_equip = false;
     bot5_name = "Nope Bot5";
 
     ///// Equipe the Bots Here 
@@ -28,12 +35,12 @@ function equipe_bots(){
     }
     
 
-    if(bot5_equip === true){
-        bot5_create();    
+    if(bot2_equip === true){
+        bot2_create();    
     }
     
-    if(bot4_equip === true){
-        bot4_create();
+    if(bot3_equip === true){
+        bot3_create();
     }
     
     
@@ -61,32 +68,32 @@ function use_bots(){
     }
     
     
-    if(bot5_equip === true){
+    if(bot2_equip === true){
         
         if(D_key.isDown){
-            bot5_shoot();
+            bot2_shoot();
         }
         
         if(E_key.isDown){
-            bot5_up()
+            bot2_up()
         }else if(C_key.isDown){
-            bot5_down()
+            bot2_down()
         }
         
     }
     
     
         
-    if(bot4_equip === true){
+    if(bot3_equip === true){
         
         if(F_key.isDown){
-            bot4_shoot();
+            bot3_shoot();
         }
         
         if(R_key.isDown){
-            bot4_up()
+            bot3_up()
         }else if(V_key.isDown){
-            bot4_down()
+            bot3_down()
         }
         
     }
@@ -322,11 +329,12 @@ var hard_aliens_config = {
     
 function preload() {
         /// stand in graphcis for the game 
-        game.load.spritesheet("spritesheet", "./assets/spritesheet.png", 100, 100, 20)
+        game.load.spritesheet("spritesheet", "./assets/spritesheet_updated.png", 100, 100, 20)
         game.load.atlas('texture', 'assets/spritesheet_final.png', 'assets/alien6_sprite.json', Phaser.Loader.TEXTURE_ATLAS_JSON_HASH);
         //game.load.atlas('texture', 'assets/alien_practice1.png', 'assets/alien_practice1.json', Phaser.Loader.TEXTURE_ATLAS_JSON_HASH);
     
         game.load.image("test_bullet", "./assets/bulletTest.png")
+        game.load.image("needleBullet", "./assets/needleBullet.png")
         game.load.image("flame", "./assets/flame.png")
         
 
@@ -655,7 +663,7 @@ function map_keys(){
 /// ----------------------------------------------------
 function bot1_create(){
     /// Create the test bot 
-    bot1 = game.add.sprite(0,100, "spritesheet",6)
+    bot1 = game.add.sprite(0,300, "spritesheet",7)
     game.physics.arcade.enable(bot1);
     bot1.body.collideWorldBounds = true;
     bot1.body.bounce.x = 0.05;
@@ -669,9 +677,11 @@ function bot1_create(){
     bot1_bullets = game.add.group();
     bot1_bullets.enableBody = true;
     bot1_bullets.physicsBodyType = Phaser.Physics.ARACADE;
-    bot1_bullets.createMultiple(20, "test_bullet");
+    bot1_bullets.createMultiple(20, "spritesheet", 1);
     bot1_bullets.setAll('outOfBoundsKill', true);
     bot1_bullets.setAll('checkWorldBounds', true);
+    bot1_bullets.setAll('anchor.x', 0.5);
+    bot1_bullets.setAll('anchor.y', 0.5);
     
     bot1_bullets.setAll('damage', 5); /// each bullet will do 5 damage
     
@@ -691,7 +701,7 @@ function bot1_shoot(){
         bullet = bot1_bullets.getFirstExists(false);
 
         if(bullet){
-            bullet.reset(bot1.x + 100, bot1.y + 50);
+            bullet.reset(bot1.x + bot1.width + 30, bot1.y + (bot1.width/2));
             bullet.body.velocity.x =+ 400;
             bot1_bullet_time = game.time.now + bot1_timeDelay;
 
@@ -728,7 +738,7 @@ function bot1_update(){
 /// ----------------------------------------------------
 function bot2_create(){
     /// Create the test bot 
-    bot2 = game.add.sprite(0,300, "spritesheet",7)
+    bot2 = game.add.sprite(0,100, "spritesheet",6)
     game.physics.arcade.enable(bot2);
     bot2.body.collideWorldBounds = true;
     bot2.body.bounce.x = 0.05;
@@ -742,9 +752,11 @@ function bot2_create(){
     bot2_bullets = game.add.group();
     bot2_bullets.enableBody = true;
     bot2_bullets.physicsBodyType = Phaser.Physics.ARACADE;
-    bot2_bullets.createMultiple(5, "flame");
+    bot2_bullets.createMultiple(5, "spritesheet", 2);
     bot2_bullets.setAll('outOfBoundsKill', true);
     bot2_bullets.setAll('checkWorldBounds', true);
+    bot2_bullets.setAll('anchor.x', 0.5);
+    bot2_bullets.setAll('anchor.y', 0.5);
     
     bot2_bullets.setAll('damage', 10); /// each bullet will do 5 damage
     
@@ -773,7 +785,7 @@ function bot2_shoot(){
         bullet = bot2_bullets.getFirstExists(false);
 
         if(bullet){
-            bullet.reset(bot2.x + 100, bot2.y);
+            bullet.reset(bot2.x + bot2.width, bot2.y + (bot2.height/2));
             bullet.body.velocity.x =+ 100;
             bot2_bullet_time = game.time.now + bot2_timeDelay;
 
@@ -799,7 +811,7 @@ function bot2_update(){
     
     /// Kill bullets that are more than 150 pixals away
     bot2_bullets.forEachAlive(function(bullet){
-        if(bullet.x > bot2.x + 150){
+        if(bullet.x > bot2.x + 200){
             bullet.kill();
         }
     })
@@ -833,7 +845,7 @@ function bot3_create(){
     bot3_bullets = game.add.group();
     bot3_bullets.enableBody = true;
     bot3_bullets.physicsBodyType = Phaser.Physics.ARACADE;
-    bot3_bullets.createMultiple(20, "test_bullet");
+    bot3_bullets.createMultiple(20, "needleBullet");
     bot3_bullets.setAll('outOfBoundsKill', true);
     bot3_bullets.setAll('checkWorldBounds', true);
     
@@ -922,6 +934,7 @@ function bot4_create(){
     bot4_bullets.setAll('checkWorldBounds', true);
     
     bot4_bullets.setAll('damage', 20); /// each bomb will do 20 damage
+    
         
     bot4_bullets.callAll('animations.add', 'animations', 'boom', [9,10,11,12,13], 5, false);
     bot4_bullets.callAll('animations.add', 'animations', 'wait', [18], 5, false);
@@ -949,7 +962,6 @@ function bot4_shoot(){
             bot4_bomb_timer = game.time.now + 1000;
             bot4_current_bomb = bullet;
             bot4_current_bomb.scale.setTo(1, 1);
-            bot4_current_bomb.anchor.setTo(.5, .5);
             bot4_current_bomb.animations.play('wait')
 
 
