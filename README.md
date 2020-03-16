@@ -70,7 +70,7 @@ If not in the classroom or on DCPS computers, It is suggested to Brackets IDE fo
 
 
 ## Built With
-* [Phaser.js ]([https://phaser.io/](https://phaser.io/)) 
+* [Phaser.js 2.6.2 ]([https://phaser.io/](https://phaser.io/)) 
 
 ## Contributing
 Alien sprites are done by TAG artist Charlotte 
