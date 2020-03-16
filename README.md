@@ -68,6 +68,8 @@ The code is designed to be manipulated in the Fiddler.js editor.  This web based
 
 If not in the classroom or on DCPS computers, It is suggested to Brackets IDE for development or any local server for testing and development.
 
+To play the base game, you can find it here: https://rectheworld.github.io/botsvsaliens/
+
 
 ## Built With
 * [Phaser.js 2.6.2 ]([https://phaser.io/](https://phaser.io/)) 
