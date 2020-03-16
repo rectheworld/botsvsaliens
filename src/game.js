@@ -5,7 +5,7 @@ var game = new Phaser.Game(700, 500, Phaser.AUTO, "gamebox", {preload: preload, 
 
 function equipe_bots(){
     
-    //// bot 1
+    //--------- Bot 1 ----------//
     bot1_equip = true;
     bot1_name = "None Bot1";
     // -- Create Function --
@@ -15,26 +15,41 @@ function equipe_bots(){
     /// bot1_up()
     /// bot1_down()
     
-    
+    //--------- Bot 2 ----------//
     bot2_equip = true;
     bot2_name = "Null Bot2";
+    // -- Create Function --
+    /// bot2_create()
+    // -- Update Functions --
+    /// bot2_shoot()
+    /// bot2_up()
+    /// bot2_down()
     
+    //--------- Bot 3 ----------//
     bot3_equip = true;
     bot3_name = "Zilth Bot3";
-    
+
+    //--------- Bot 4 ----------//
     bot4_equip = false;
     bot4_name = "Nada Bot4";
     
+    //--------- Bot 5 ----------//
     bot5_equip = false;
     bot5_name = "Nope Bot5";
+    
+    
+    
 
-    ///// Equipe the Bots Here 
-    ///// You can qupip up to 3 Bots for the Mission
+    // --------- Equipe the Bots Here  -----------------/// 
+    // ---- You can equipe up to 3 Bots for the Mission
+    // STEP 1. Pick which bot you like to use.
+    // STEP 2. Change bot#_equip to true
+    // STEP 3. Change the If statment to include the bot#_equip variable 
+    // and the bot#_create() function.
     if(bot1_equip === true){
         bot1_create();    
     }
     
-
     if(bot2_equip === true){
         bot2_create();    
     }
@@ -43,13 +58,24 @@ function equipe_bots(){
         bot3_create();
     }
     
+    if(bot4_equip === true){
+        bot4_create();
+    }
+    
+//    if(________ === true){
+//        ________();
+//    }
+    
     
 } // End equipe bots 
 
 
-
-
-
+// --------- Design Controls Here-----------------/// 
+// ---- What keys do you want to use to control your bots?
+// STEP 1. Make sure bot#_equip is set to true
+// STEP 2. Change the If statment to include the bot#_equip variable 
+// STEP 3. Pick a key to use as the shoot button, add the bot#_shoot() command inside the if statment 
+// STEP 4. Repete with the Up and Down commands 
 
 function use_bots(){
     
@@ -94,6 +120,34 @@ function use_bots(){
             bot3_up()
         }else if(V_key.isDown){
             bot3_down()
+        }
+        
+    }
+    
+    if(bot4_equip === true){
+        
+        if(G_key.isDown){
+            bot4_shoot();
+        }
+        
+        if(T_key.isDown){
+            bot4_up()
+        }else if(B_key.isDown){
+            bot4_down()
+        }
+        
+    }
+    
+    if(bot5_equip === true){
+        
+        if(H_key.isDown){
+            bot5_shoot();
+        }
+        
+        if(Y_key.isDown){
+            bot5_up()
+        }else if(N_key.isDown){
+            bot5_down()
         }
         
     }
@@ -662,6 +716,9 @@ function map_keys(){
 ////// Bot 1 Code 
 /// ----------------------------------------------------
 function bot1_create(){
+    
+    if (bot1_equip != true) return;
+    
     /// Create the test bot 
     bot1 = game.add.sprite(0,300, "spritesheet",7)
     game.physics.arcade.enable(bot1);
@@ -692,6 +749,7 @@ function bot1_create(){
 
 function bot1_shoot(){
     
+    if (bot1_equip != true) return;
     
     if(game.time.now > bot1_bullet_time){
         // change name text to white
@@ -712,16 +770,19 @@ function bot1_shoot(){
 
 
 function bot1_up(){
+    if (bot1_equip != true) return;
+    
     bot1.y -= 3;
 };
 
 
 function bot1_down(){
+    if (bot1_equip != true) return;
     bot1.y += 3;
 };
 
 function bot1_update(){
-    
+    if (bot1_equip != true) return;
     
     game.physics.arcade.overlap(bot1_bullets, current_phase.group, collisionHandler, null, this);
     
@@ -737,6 +798,9 @@ function bot1_update(){
 ////// Bot 2 Code 
 /// ----------------------------------------------------
 function bot2_create(){
+    
+    if (bot2_equip != true) return;
+    
     /// Create the test bot 
     bot2 = game.add.sprite(0,100, "spritesheet",6)
     game.physics.arcade.enable(bot2);
@@ -766,7 +830,7 @@ function bot2_create(){
 }; /// End of test create 
 
 function bot2_shoot(){
-    
+    if (bot2_equip != true) return;
     /// kill bullets thats are more than 150 pixals away 
     bot2_bullets.forEachAlive(function(bullet){
         
@@ -796,16 +860,18 @@ function bot2_shoot(){
 
 
 function bot2_up(){
+    if (bot2_equip != true) return;
     bot2.y -= 1;
 };
 
 
 function bot2_down(){
+    if (bot2_equip != true) return;
     bot2.y += 1;
 };
 
 function bot2_update(){
-    
+    if (bot2_equip != true) return;
     
     game.physics.arcade.overlap(bot2_bullets, current_phase.group, collisionHandler, null, this);
     
@@ -830,6 +896,8 @@ function bot2_update(){
 /// ----------------------------------------------------
 function bot3_create(){
     
+    if (bot3_equip != true) return;
+    
     /// Create the test bot 
     bot3 = game.add.sprite(0,0, "spritesheet",15)
     game.physics.arcade.enable(bot3);
@@ -849,7 +917,7 @@ function bot3_create(){
     bot3_bullets.setAll('outOfBoundsKill', true);
     bot3_bullets.setAll('checkWorldBounds', true);
     
-    bot3_bullets.setAll('damage', 1); /// each bullet will do 5 damage
+    bot3_bullets.setAll('damage', 2); /// each bullet will do 5 damage
     
     bot3_bullet_time = game.time.now;
 
@@ -857,6 +925,8 @@ function bot3_create(){
 }; /// End of test create 
 
 function bot3_shoot(){
+    
+    if (bot3_equip != true) return;
     
     /// kill bullets thats are more than 150 pixals away 
     bot3_bullets.forEachAlive(function(bullet){
@@ -886,17 +956,19 @@ function bot3_shoot(){
 
 
 function bot3_up(){
+    if (bot3_equip != true) return;
     bot3.y -= 5;
 };
 
 
 function bot3_down(){
+    if (bot3_equip != true) return;
     bot3.y += 5;
 };
 
 function bot3_update(){
     
-    
+    if (bot3_equip != true) return;
     game.physics.arcade.overlap(bot3_bullets, current_phase.group, collisionHandler, null, this);
 
     
@@ -912,6 +984,7 @@ function bot3_update(){
 ////// Bot 4 Code 
 /// ----------------------------------------------------
 function bot4_create(){
+    if (bot4_equip != true) return;
     
     /// Create the test bot 
     bot4 = game.add.sprite(0,0, "spritesheet",16)
@@ -945,7 +1018,7 @@ function bot4_create(){
 }; /// End of test create 
 
 function bot4_shoot(){
-        
+    if (bot4_equip != true) return;
     
     if(game.time.now > bot4_bullet_time){
         // change name text to white
@@ -973,16 +1046,18 @@ function bot4_shoot(){
 
 
 function bot4_up(){
+    if (bot4_equip != true) return;
     bot4.y -= 5;
 };
 
 
 function bot4_down(){
+    if (bot4_equip != true) return;
     bot4.y += 5;
 };
 
 function bot4_update(){
-    
+    if (bot4_equip != true) return;
     game.physics.arcade.overlap(bot4_bullets, current_phase.group, collisionHandler, null, this);
 
     
@@ -1032,6 +1107,7 @@ function bot4_update(){
 ////// Bot 5 Code 
 /// ----------------------------------------------------
 function bot5_create(){
+    if (bot5_equip != true) return;
     
     /// Create the test bot 
     bot5 = game.add.sprite(0,500, "spritesheet",17)
@@ -1061,7 +1137,7 @@ function bot5_create(){
 
 function bot5_shoot(){
     
-
+    if (bot5_equip != true) return;
     
     if(game.time.now > bot5_bullet_time){
         // change name text to white
@@ -1085,16 +1161,18 @@ function bot5_shoot(){
 
 
 function bot5_up(){
+    if (bot5_equip != true) return;
     bot5.y -= 5;
 };
 
 
 function bot5_down(){
+    if (bot5_equip != true) return;
     bot5.y += 5;
 };
 
 function bot5_update(){
-    
+    if (bot5_equip != true) return;
     game.physics.arcade.overlap(bot5_bullets, current_phase.group, slimeHandler, null, this);
     
     /// Change the Text to green when ready to fire 
